@@ -17,7 +17,7 @@ def read_surfacemesh(file):
     vertices = pd.read_csv(file, sep=" ", header=None,
                            skiprows=lambda x: x not in range(num_vertices + 2, num_triangles + num_vertices + 2))
 
-    # modifies vertices to get only first 3 columns which is the vertex coordinates of the triangles
+    # modifies vertices to get only first 3 columns which is the vertex coordinates of the triangles as pandas dataframe
     triangle_vertex_coords = vertices[[0, 1, 2]]
 
     print(triangle_vertex_coords)
