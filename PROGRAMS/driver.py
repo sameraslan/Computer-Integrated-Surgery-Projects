@@ -16,7 +16,10 @@ from ReadSurfaceMesh import read_surfacemesh
 
 def main(argv):
     surfacemesh_name = './DATA/Problem3MeshFile.sur'
-    read_surfacemesh(surfacemesh_name)
+
+    # Gets vertex coordinates and each triangle's respective vertices index
+    vertex_coords, triangle_indices = read_surfacemesh(surfacemesh_name)
+
 
 
 if __name__ == "__main__":
