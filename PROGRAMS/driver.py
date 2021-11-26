@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import math
 from ReadSurfaceMesh import read_surfacemesh
+from FindClosestPointTriangle import find_closest_point
 
 # driver for PA3.
 
@@ -19,6 +20,7 @@ def main(argv):
 
     # Gets vertex coordinates and each triangle's respective vertices index
     vertex_coords, triangle_indices = read_surfacemesh(surfacemesh_name)
+    print(find_closest_point(triangle_indices[0], triangle_indices[1:4, :]))
 
 
 
