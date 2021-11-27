@@ -4,6 +4,7 @@ import pandas as pd
 import math
 from ReadSurfaceMesh import read_surfacemesh
 from FindClosestPointTriangle import find_closest_point
+from FindClosestPointOnMesh import find_closest_point_mesh
 
 # driver for PA3.
 
@@ -17,11 +18,12 @@ from FindClosestPointTriangle import find_closest_point
 
 def main(argv):
     surfacemesh_name = './DATA/Problem3MeshFile.sur'
+    bodyA_name = './DATA/Problem3-BodyA.txt'
+    bodyB_name = './DATA/Problem3-BodyA.txt'
 
     # Gets vertex coordinates and each triangle's respective vertices index
     vertex_coords, triangle_indices = read_surfacemesh(surfacemesh_name)
-    print(find_closest_point(triangle_indices[0], triangle_indices[1:4, :]))
-
+    print(find_closest_point_mesh(vertex_coords[triangle_indices[0][0]], triangle_indices, vertex_coords))
 
 
 if __name__ == "__main__":
