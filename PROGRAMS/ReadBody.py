@@ -16,4 +16,4 @@ def read_body(file):
     tip_coords = np.array(pd.read_csv(file, delim_whitespace=True, header=None,
                                     skiprows=lambda x: x in range(0, num_markers + 1)))
 
-    return led_marker_coords, tip_coords
+    return led_marker_coords, tip_coords[0]

@@ -16,7 +16,7 @@ def read_sample_readings(file):
     # sets each 2d matrix of A body, B body, and unneeded tracker coordinates
     for i in range(num_sample_frames):
         led_markers[i] = np.delete(np.array(pd.read_csv(file, sep=",", header=None,
-                             skiprows=lambda x: x not in range(i * num_leds + 1, (i+1) * num_leds + 1))), (12, 13, 14, 15), axis=0)
+                             skiprows=lambda x: x not in range(i * num_leds + 1, (i+1) * num_leds + 1))),
+                                   (12, 13, 14, 15), axis=0)
 
-    print(led_markers)
     return led_markers, num_sample_frames
