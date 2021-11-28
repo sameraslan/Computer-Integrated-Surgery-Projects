@@ -11,7 +11,7 @@ from Magnitude import magnitude_distance
 # Simple bounding box search
 
 
-def find_closest_point_mesh(a, indices, points):
+def find_closest_point_mesh(a, points, indices):
     lower = np.array([0, 0, 0]).T
     upper = np.array([0, 0, 0]).T
     c = [0, 0, 0]
@@ -40,7 +40,6 @@ def find_closest_point_mesh(a, indices, points):
 
             if magnitude_distance(h, a) < bound:  # if absolute value of distance less than bound
                 c = h  # set closest point to c
-                print(c)
                 bound = magnitude_distance(h, a)
 
     return c

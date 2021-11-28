@@ -63,8 +63,8 @@ def main(argv):
         F_reg = Frame(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]), np.array([0, 0, 0]))
         sk = frame_times_vector(F_reg, dk)
 
-        # 6. Find point on surface mesh closest to sk
-
+        # 6. ck = point on surface mesh closest to sk
+        ck = find_closest_point_mesh(sk, vertex_coords, triangle_indices)
 
 
 
