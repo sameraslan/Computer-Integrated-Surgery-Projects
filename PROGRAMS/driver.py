@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import math
 from ReadSurfaceMesh import read_surfacemesh
+from ReadBody import read_body
+from ReadSampleReadings import read_sample_readings
 from FindClosestPointTriangle import find_closest_point
 from FindClosestPointOnMesh import find_closest_point_mesh
 
@@ -20,10 +22,13 @@ def main(argv):
     surfacemesh_name = './DATA/Problem3MeshFile.sur'
     bodyA_name = './DATA/Problem3-BodyA.txt'
     bodyB_name = './DATA/Problem3-BodyA.txt'
+    sample_readingA = './DATA/PA3-A-Debug-SampleReadingsTest.txt'
 
     # Gets vertex coordinates and each triangle's respective vertices index
     vertex_coords, triangle_indices = read_surfacemesh(surfacemesh_name)
-    print(find_closest_point_mesh(vertex_coords[triangle_indices[0][0]], triangle_indices, vertex_coords))
+    led_marker_coords, tip_coords = read_body(bodyA_name)
+    read_sample_readings(sample_readingA)
+    # print(find_closest_point_mesh(vertex_coords[triangle_indices[0][0]], triangle_indices, vertex_coords))
 
 
 if __name__ == "__main__":
