@@ -16,7 +16,8 @@ def main(argv):
     surfacemesh_name = './DATA/Problem3MeshFile.sur'
     bodyA_name = './DATA/Problem3-BodyA.txt'
     bodyB_name = './DATA/Problem3-BodyB.txt'
-    sample_reading_debug_A = './DATA/PA3-A-Debug-SampleReadingsTest.txt'
+    file_choice = 'F'
+    sample_reading_debug = './DATA/PA3-' + file_choice + '-Debug-SampleReadingsTest.txt'
 
     # 1. Read surface mesh
     # Below lines read the 3D surface mesh
@@ -29,12 +30,11 @@ def main(argv):
 
     # 3. Read Sample Reading for some debug sample reading
     # Get data itself for sample_readings (returns 12x3 of A, B marker readings)
-    sample_reading_debug_A, num_sampleframes = read_sample_readings(sample_reading_debug_A)
+    sample_reading_debug_A, num_sampleframes = read_sample_readings(sample_reading_debug)
 
     # 4. For each sample frame k, get values of aik and bik
     #    Using point-cloud-to-point-cloud registration to determine poses Fak and Fbk
     #    rigid bodies with respect to the tracker
-    file_choice = 'A'
     file_output_name = 'PA3-' + file_choice + '-Output.txt'
     f = open(file_output_name, "w+")
     f.write(str(num_sampleframes) + " " + file_output_name + '\n')
