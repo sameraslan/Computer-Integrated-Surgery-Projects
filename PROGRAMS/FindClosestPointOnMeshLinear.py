@@ -3,8 +3,7 @@ from FindClosestPointTriangle import find_closest_point
 from Magnitude import magnitude_distance
 
 # Finds closest point on mesh
-# Simple bounding box search
-
+# Simple bounding search
 
 def find_closest_point_mesh_linear(a, points, indices):
     #lower = np.array([0, 0, 0]).T

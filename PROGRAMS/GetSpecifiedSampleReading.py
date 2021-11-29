@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
 
-# Returns resulting led_markers given specified body
-
+# Returns resulting led_markers given specified body, sample frame k
 def get_specified_sample(led_readings, k, body_desired):
     if body_desired == "A":
         return led_readings[k][:6]

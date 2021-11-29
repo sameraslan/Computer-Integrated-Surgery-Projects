@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
 
-# Reads surfacemesh file. Output the vertex coordinates for all of the triangles as np array
-# and the indices of the vertices for each triangle
+# Reads sample readings file. Outputs led markers and the number of sample frames
 
 def read_sample_readings(file):
     # reads in first line of number of vertices as int
