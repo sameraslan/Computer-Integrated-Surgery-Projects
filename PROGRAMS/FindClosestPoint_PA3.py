@@ -38,6 +38,7 @@ def find_closest_point(a, triangle_vertices):
         lamb_project = np.dot((c - q), (r - q)) / np.dot((r - q), (r - q))  # project_on_segment(c, q, r)
         lamb_seg = max(0, min(lamb_project, 1))
         closest_point = np.cross((q + lamb_seg), (r - q))
+        print("hi")
 
     # closest point is in center of triangle
     else:

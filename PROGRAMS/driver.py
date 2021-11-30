@@ -17,6 +17,7 @@ def main(argv):
     bodyA_name = './DATA/Problem3-BodyA.txt'
     bodyB_name = './DATA/Problem3-BodyB.txt'
     file_choices = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J']
+    file_choices = ['A']
 
     # For files A-J except I
     for file_choice in file_choices:
@@ -84,8 +85,9 @@ def main(argv):
             dk = np.around(dk, 2)
 
             # 7. Write to output file
-            f.write("\t" + str(dk[0]) + "\t" + str(dk[1]) + "\t" + str(dk[2]) + "\t" + "\t" +
-                    str(ck[0]) + "\t" + str(ck[1]) + "\t" + str(ck[2]) + "\t" + str(mag_dk_ck) + '\n')
+            f.write('%8.2f %8.2f %8.2f\t\t%8.2f %8.2f %8.2f\t%8.5s\n' % (dk[0], dk[1], dk[2], ck[0], ck[1], ck[2], str(mag_dk_ck)))
+            #f.write("\t" + str(dk[0]) + "\t" + str(dk[1]) + "\t" + str(dk[2]) + "\t" + "\t" +
+                    #str(ck[0]) + "\t" + str(ck[1]) + "\t" + str(ck[2]) + "\t" + str(mag_dk_ck) + '\n')
 
 if __name__ == "__main__":
     main(sys.argv[1:])

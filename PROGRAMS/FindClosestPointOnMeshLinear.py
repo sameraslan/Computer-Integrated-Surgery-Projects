@@ -1,5 +1,5 @@
 import numpy as np
-from FindClosestPointTriangle import find_closest_point
+from FindClosestPoint_PA4 import find_closest_point
 from Magnitude import magnitude_distance
 
 # Finds closest point on mesh
