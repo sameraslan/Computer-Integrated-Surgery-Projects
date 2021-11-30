@@ -53,8 +53,8 @@ def find_closest_point(a, triangle_vertices):
             tmp1 = dot_3 + dot_5
 
             if tmp1 > tmp0:
-                numer = tmp1 - tmp0
                 denom = dot_1 - 2 * dot_2 + dot_3
+                numer = tmp1 - tmp0
                 s = max(0, min(1, numer / denom))
                 t = 1 - s
             else:
@@ -62,16 +62,16 @@ def find_closest_point(a, triangle_vertices):
                 s = 0
         elif t < 0:
             if dot_1 + dot_4 > dot_2 + dot_5:
-                numer = dot_3 + dot_5 - dot_2 - dot_4
                 denom = dot_1 - 2 * dot_2 + dot_3
+                numer = dot_3 + dot_5 - dot_2 - dot_4
                 s = max(0, min(1, numer / denom))
                 t = 1 - s
             else:
                 s = max(0, min(1, -dot_5 / dot_3))
                 t = 0
         else:
-            numer = dot_3 + dot_5 - dot_2 - dot_4
             denom = dot_1 - 2 * dot_2 + dot_3
+            numer = dot_3 + dot_5 - dot_2 - dot_4
             s = max(0, min(1, numer / denom))
             t = 1 - s
 
