@@ -1,4 +1,4 @@
-from numpy import linalg
+from numpy import linalg, abs
 
 
 # The Frame Library.
@@ -40,6 +40,13 @@ from numpy import linalg
 #       Outputs:
 #           3x1 vector defined as a = R*v + p
 
+#   abs_subtract_frames (F1 - F2)
+#       Inputs:
+#            F1:     Frame object 1
+#            F2:     Frame object 2
+#       Outputs:
+#            new Frame object defined as abs(F1-F2) = abs(inv(F2) * F1)
+
 class Frame:
     def __init__(self, R, p):
         if R.shape != (3, 3):
@@ -69,3 +76,9 @@ def compose_frames(A, B):
 
 def frame_times_vector(F, v):
     return (F.getR() @ v + F.getp()).reshape(3, )
+
+
+def abs_subtract_frames(A, B):
+    inverse_A = A.getInverse()
+    sub = compose_frames(inverse_A, B)
+    return Frame(abs(sub.getR()), abs(sub.getp()))
