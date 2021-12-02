@@ -17,8 +17,6 @@ def main(argv):
     bodyA_name = './DATA/Problem3-BodyA.txt'
     bodyB_name = './DATA/Problem3-BodyB.txt'
     file_choices = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J']
-    file_choices = ['A']
-
     # For files A-J except I
     for file_choice in file_choices:
 
@@ -27,10 +25,10 @@ def main(argv):
 
         # Files A-F
         if 64 < ord(file_choice) < 71:
-            sample_reading_debug = './DATA/PA3-' + file_choice + '-Debug-SampleReadingsTest.txt'
+            sample_reading_debug = './DATA/PA4-' + file_choice + '-Debug-SampleReadingsTest.txt'
         # Files G-J
         elif 70 < ord(file_choice) < 75:
-            sample_reading_debug = './DATA/PA3-' + file_choice + '-Unknown-SampleReadingsTest.txt'
+            sample_reading_debug = './DATA/PA4-' + file_choice + '-Unknown-SampleReadingsTest.txt'
         else:
             print("Incorrect command line argument (must be capital A-H or J)")
             exit(0)
@@ -51,9 +49,13 @@ def main(argv):
         # 4. For each sample frame k, get values of aik and bik
         #    Using point-cloud-to-point-cloud registration to determine poses Fak and Fbk
         #    rigid bodies with respect to the tracker
-        file_output_name = 'PA3-' + file_choice + '-Output.txt'
+        file_output_name = 'PA4-' + file_choice + '-Output.txt'
         f = open(file_output_name, "w+")
         f.write(str(num_sampleframes) + " " + file_output_name + '\n')
+        print(file_output_name)
+
+        c_all = []
+        d_all = []
 
         for k in range(num_sampleframes):
             # Find frame F_Ak
@@ -70,89 +72,128 @@ def main(argv):
             # dk gets (F_Bk)^-1 * F_Ak * A_tip
             dk = frame_times_vector(compose_frames(F_Bk.getInverse(), F_Ak), tip_coords_A)
 
-            # 5. Assume F_reg = I for problem 4 as initial guess; sk (sample points) = F_reg * dk
-            #    F_reg is essentially initial transformation T0
-            identity_R = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-            F_reg = Frame(identity_R, np.array([0, 0, 0]))
-            sk = frame_times_vector(F_reg, dk)
-
             # 6. ck = point on surface mesh closest to sk
-            ck = find_closest_point_mesh_linear(sk, vertex_coords, triangle_indices)
+            ck = find_closest_point_mesh_linear(dk, vertex_coords, triangle_indices)
 
-            # Find magnitude of difference between dk and ck
-            mag_dk_ck = np.around(magnitude_distance(dk, ck), 3)
+            c_all.append(ck)
+            d_all.append(dk)
 
-            # Round to (nearest even if .005) two decimals places
-            #ck = np.around(ck, 2)
-            #dk = np.around(dk, 2)
+        # End of registration
+
+        # Beginning of ICP
+
+        s_all = []  # to remove later warning
+        epsilon_prev = len(d_all)
+        maximum_iterations = 100
+
+        threshold = .1
+        # Vectorized threshold and true array
+        threshold_F = threshold * np.ones((1, 12))
+
+        # Assume F_reg = I for problem 4 as initial guess; sk (sample points) = F_reg * dk
+        # F_reg is essentially initial transformation T0
+        identity_R = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        F_reg = Frame(identity_R, np.array([0, 0, 0]))
+        F_reg_after = F_reg
+
+        nu_n = 100
+
+        # Instead of while not converged do, we use a set number of iterations and check for convergence internally
+        for iteration in range(maximum_iterations):
+
+            # Holds all sks
+            s_all = []
+            for dk in d_all:
+                # For every sk add the frame transformation of dk to this array of sks
+                s_all.append(frame_times_vector(F_reg_after, dk))
 
 
-            points_remaining = len(dk)
+            # Re-initialize A and B, and hold distance in array if less than nu_naut
+            A = []
+            B = []
+            distance_hold = []
 
-            maximum_iterations = 100
-            threshold = .0001
+            # for each sample frame
+            for sample in range(num_sampleframes):
+                # Apply find closest point and set to ck
+                c_all[sample] = find_closest_point_mesh_linear(s_all[sample], vertex_coords, triangle_indices)
 
-            # Vectorized threshold and true array
-            threshold_F = threshold * np.ones((1, 12))
+                # Gets norm distance between ck, sk
+                distance = magnitude_distance(c_all[sample], s_all[sample])
 
-            nu_naut = 100
+                # Valid match check
+                if distance < nu_n:
+                    # Subset of Q with valid matches
+                    A.append(d_all[sample])
 
-            # Instead of while not converged do, we use a set number of iterations and check for convergence internally
-            for iteration in range(maximum_iterations):
-                # this is the closest point on the mesh
-                z = 1
+                    # Points on M corresponding to A
+                    B.append(c_all[sample])
 
-                sk = frame_times_vector(F_reg, dk)
-                keep_index = 1
+                    # Append to distance storage for possible tightening of nu_naut later
+                    distance_hold.append(distance)
 
-                # Re-initialize A and B
-                A = []
-                B = []
-                e = []
+            # Terminate iteration if len(A) == 0 since nu_naut may be
+            # too small for the distance
+            if len(A) == 0:
+                break
 
-                # for each sample frame
-                for sample in range(num_sampleframes):
-                    ck = find_closest_point_mesh_linear(sk, vertex_coords, triangle_indices)
+            # Flatten A and B
+            A = np.concatenate(A).ravel().reshape(-1, 3)
+            B = np.concatenate(B).ravel().reshape(-1, 3)
 
-                    distance = magnitude_distance(ck, sk)
+            # Create new F_reg from A and B
+            R_reg_after, p_reg_after = rigid_transform_3D(A, B)
+            F_reg_after = Frame(R_reg_after, p_reg_after)
 
-                    if distance < nu_naut:
-                        A.append(dk)
-                        B.append(ck)
+            # Get absolute value difference between new and old frame
+            abs_frame_offset = abs_subtract_frames(F_reg_after, F_reg)
 
-                        e.append(distance)
-                        keep_index += 1
+            # Vectorize and concatenate offset so comparison is easier
+            offset_R = np.ndarray.flatten(abs_frame_offset.getR())
+            offset_p = np.ndarray.flatten(abs_frame_offset.getp())
+            abs_frame_offset = np.concatenate((offset_R, offset_p))
 
-                # Terminate iteration if len(A) == 0 since nu_naut may be too small
-                if len(A) == 0:
+            # maybe check for threshold differently since p section is always false
+            #print(abs_frame_offset)
+            less_than_check = abs_frame_offset < threshold_F
+            #print(less_than_check)
+
+            # Was initially going to do this check but it causes unpredictable behavior
+            # Check if this has converged or not; if less than threshold then converged and break
+            # the < check returns a 1x12 array of booleans checking if each element is < threshold
+            # if np.alltrue(less_than_check):
+            #     for dk in d_all:
+            #         # For every sk add the frame transformation of dk to this array of sks
+            #         s_all.append(frame_times_vector(F_reg_after, dk))
+            #     break
+
+            print(len(A) / epsilon_prev)
+
+            # If number of distances less than nu_naut is from more than 90% of sample frames
+            # This is essentially the epsilon comparison from the lecture notes
+            # Gamma <= epsilon_n / epsilon_n-1 <= 1
+            if (.95 <= len(A) / epsilon_prev <= 1):
+                # If threshold above i
+                if nu_n < .005:
+                    for dk in d_all:
+                        # For every sk add the frame transformation of dk to this array of sks
+                        s_all.append(frame_times_vector(F_reg_after, dk))
                     break
 
-                R_reg_after, p_reg_after = rigid_transform_3D(np.array(A), np.array(B))
-                F_reg_after = Frame(R_reg_after, p_reg_after)
+                # nu_n gets 3 * mean of distances that satisfied previous nu_naut check
+                nu_n = 3 * np.mean(distance_hold)
 
-                # Get absolute value difference between new and old frame
-                abs_frame_offset = abs_subtract_frames(F_reg_after, F_reg)
+                # Length of points that satisfied this previously becomes # of remaining points
+                epsilon_prev = len(A)
 
-                # Vectorize and concatenate offset so comparison is easier
-                offset_R = np.ndarray.flatten(abs_frame_offset.getR())
-                offset_p = np.ndarray.flatten(abs_frame_offset.getp())
-                abs_frame_offset = np.concatenate((offset_R, offset_p))
+            print("Iteration", iteration)
 
-                # Check if this has converged or not; if less than threshold then converged and break
-                # the < check returns a 1x12 array of booleans checking if each element is < threshold
-                if np.alltrue(abs_frame_offset < threshold_F):
-                    sk = frame_times_vector(F_reg_after, dk)
-                    break
 
-                F_reg = F_reg_after
-
-                if (len(A) / points_remaining >= .9):
-                    nu_naut = 3 * np.mean(e)
-                    points_remaining = len(A)
-
-            mag_sk_ck = np.around(magnitude_distance(sk, ck), 3)
-
-            # 7. Write to output file
+        # 7. Write to output file
+        for k in range(num_sampleframes):
+            mag_sk_ck = np.around(magnitude_distance(s_all[k], c_all[k]), 3)
+            sk = np.around(s_all[k], 2)
+            ck = np.around(c_all[k], 2)
             f.write('%8.2f %8.2f %8.2f\t\t%8.2f %8.2f %8.2f\t%8.5s\n' % (sk[0], sk[1], sk[2], ck[0], ck[1], ck[2], str(mag_sk_ck)))
 
 if __name__ == "__main__":
