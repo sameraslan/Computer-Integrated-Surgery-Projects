@@ -16,8 +16,9 @@ def main(argv):
     surfacemesh_name = './DATA/Problem3MeshFile.sur'
     bodyA_name = './DATA/Problem3-BodyA.txt'
     bodyB_name = './DATA/Problem3-BodyB.txt'
-    file_choices = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J']
-    # For files A-J except I
+    file_choices = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K']
+    file_choices = ['K']
+    # For files A-K except I
     for file_choice in file_choices:
 
         # initialize file name to remove later warning due to ifs below
@@ -26,11 +27,11 @@ def main(argv):
         # Files A-F
         if 64 < ord(file_choice) < 71:
             sample_reading_debug = './DATA/PA4-' + file_choice + '-Debug-SampleReadingsTest.txt'
-        # Files G-J
-        elif 70 < ord(file_choice) < 75:
+        # Files G-K
+        elif 70 < ord(file_choice) < 76:
             sample_reading_debug = './DATA/PA4-' + file_choice + '-Unknown-SampleReadingsTest.txt'
         else:
-            print("Incorrect command line argument (must be capital A-H or J)")
+            print("Incorrect command line argument (must be capital A-H or J/K)")
             exit(0)
 
         # 1. Read surface mesh
@@ -52,7 +53,6 @@ def main(argv):
         file_output_name = 'PA4-' + file_choice + '-Output.txt'
         f = open(file_output_name, "w+")
         f.write(str(num_sampleframes) + " " + file_output_name + '\n')
-        print(file_output_name)
 
         c_all = []
         d_all = []
@@ -84,9 +84,11 @@ def main(argv):
 
         s_all = []  # to remove later warning
         epsilon_prev = len(d_all)
-        maximum_iterations = 100
 
-        threshold = .1
+        # Maximum number of iterations we found was 65, so 80 seems safe if this is run on other test data
+        maximum_iterations = 75
+
+        threshold = .00001  # 10^-5 as threshold found to be best without doing too many iterations
         # Vectorized threshold and true array
         threshold_F = threshold * np.ones((1, 12))
 
@@ -147,43 +149,36 @@ def main(argv):
 
             # Get absolute value difference between new and old frame
             abs_frame_offset = abs_subtract_frames(F_reg_after, F_reg)
+            F_reg = F_reg_after  # Set next F_reg for comparison to current F_reg
 
             # Vectorize and concatenate offset so comparison is easier
             offset_R = np.ndarray.flatten(abs_frame_offset.getR())
             offset_p = np.ndarray.flatten(abs_frame_offset.getp())
             abs_frame_offset = np.concatenate((offset_R, offset_p))
+            abs_frame_offset[0] = abs_frame_offset[0] - 1
+            abs_frame_offset[4] = abs_frame_offset[0] - 1
+            abs_frame_offset[8] = abs_frame_offset[0] - 1
+            less_than_check = abs_frame_offset <= threshold_F
 
-            # maybe check for threshold differently since p section is always false
-            #print(abs_frame_offset)
-            less_than_check = abs_frame_offset < threshold_F
-            #print(less_than_check)
-
-            # Was initially going to do this check but it causes unpredictable behavior
             # Check if this has converged or not; if less than threshold then converged and break
             # the < check returns a 1x12 array of booleans checking if each element is < threshold
-            # if np.alltrue(less_than_check):
-            #     for dk in d_all:
-            #         # For every sk add the frame transformation of dk to this array of sks
-            #         s_all.append(frame_times_vector(F_reg_after, dk))
-            #     break
-
-            print(len(A) / epsilon_prev)
+            if np.alltrue(less_than_check):
+                for dk in d_all:
+                    # For every sk add the frame transformation of dk to this array of sks
+                    s_all.append(frame_times_vector(F_reg_after, dk))
+                break
 
             # If number of distances less than nu_naut is from more than 90% of sample frames
             # This is essentially the epsilon comparison from the lecture notes
             # Gamma <= epsilon_n / epsilon_n-1 <= 1
-            if (.95 <= len(A) / epsilon_prev <= 1):
-                # If threshold above i
-                if nu_n < .005:
-                    for dk in d_all:
-                        # For every sk add the frame transformation of dk to this array of sks
-                        s_all.append(frame_times_vector(F_reg_after, dk))
-                    break
-
+            # If this is true for less than 90% of sample frames then we don't change mu
+            # Allowing us to get unstuck from local minima
+            if .9 <= len(A) / epsilon_prev <= 1:
                 # nu_n gets 3 * mean of distances that satisfied previous nu_naut check
                 nu_n = 3 * np.mean(distance_hold)
 
                 # Length of points that satisfied this previously becomes # of remaining points
+                # Prevents ratio above from becoming greater than 1 for more than one iteration
                 epsilon_prev = len(A)
 
             print("Iteration", iteration)
@@ -191,10 +186,10 @@ def main(argv):
 
         # 7. Write to output file
         for k in range(num_sampleframes):
-            mag_sk_ck = np.around(magnitude_distance(s_all[k], c_all[k]), 3)
-            sk = np.around(s_all[k], 2)
-            ck = np.around(c_all[k], 2)
-            f.write('%8.2f %8.2f %8.2f\t\t%8.2f %8.2f %8.2f\t%8.5s\n' % (sk[0], sk[1], sk[2], ck[0], ck[1], ck[2], str(mag_sk_ck)))
+            mag_sk_ck = float(np.around(magnitude_distance(s_all[k], c_all[k]), 3))
+            sk = np.round(s_all[k], 2)
+            ck = np.round(c_all[k], 2)
+            f.write('%8.2f %8.2f %8.2f\t   %8.2f %8.2f %8.2f\t  %.3f\n' % (sk[0], sk[1], sk[2], ck[0], ck[1], ck[2], mag_sk_ck))
 
 if __name__ == "__main__":
     main(sys.argv[1:])
