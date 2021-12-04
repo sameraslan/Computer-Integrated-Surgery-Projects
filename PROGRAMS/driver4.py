@@ -17,7 +17,7 @@ def main(argv):
     bodyA_name = './DATA/Problem3-BodyA.txt'
     bodyB_name = './DATA/Problem3-BodyB.txt'
     file_choices = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K']
-    file_choices = ['K']
+
     # For files A-K except I
     for file_choice in file_choices:
 
@@ -82,6 +82,7 @@ def main(argv):
 
         # Beginning of ICP
 
+        # 1. Set threshold, max iterations, and F_reg initial guess as I
         s_all = []  # to remove later warning
         epsilon_prev = len(d_all)
 
@@ -100,9 +101,11 @@ def main(argv):
 
         nu_n = 100
 
+        # 2. For every iteration
         # Instead of while not converged do, we use a set number of iterations and check for convergence internally
         for iteration in range(maximum_iterations):
 
+            # 3. Do frame times vector to get sk given the previously found frame
             # Holds all sks
             s_all = []
             for dk in d_all:
@@ -115,6 +118,7 @@ def main(argv):
             B = []
             distance_hold = []
 
+            # 3. For each sample frame append to A and B if distance < nu_n
             # for each sample frame
             for sample in range(num_sampleframes):
                 # Apply find closest point and set to ck
@@ -139,6 +143,7 @@ def main(argv):
             if len(A) == 0:
                 break
 
+            # 4. We flatten A and B and then compare below
             # Flatten A and B
             A = np.concatenate(A).ravel().reshape(-1, 3)
             B = np.concatenate(B).ravel().reshape(-1, 3)
@@ -155,6 +160,8 @@ def main(argv):
             offset_R = np.ndarray.flatten(abs_frame_offset.getR())
             offset_p = np.ndarray.flatten(abs_frame_offset.getp())
             abs_frame_offset = np.concatenate((offset_R, offset_p))
+
+            # Essentially doing quaternion in order to make the comparison work
             abs_frame_offset[0] = abs_frame_offset[0] - 1
             abs_frame_offset[4] = abs_frame_offset[0] - 1
             abs_frame_offset[8] = abs_frame_offset[0] - 1
@@ -180,8 +187,6 @@ def main(argv):
                 # Length of points that satisfied this previously becomes # of remaining points
                 # Prevents ratio above from becoming greater than 1 for more than one iteration
                 epsilon_prev = len(A)
-
-            print("Iteration", iteration)
 
 
         # 7. Write to output file
